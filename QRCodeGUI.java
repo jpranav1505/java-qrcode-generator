@@ -17,28 +17,38 @@ public class QRCodeGUI implements ActionListener {
     JFrame frame;
     JTextField textField;
     JButton clearButton;
-    // NEW: A label to hold the QR code image for the preview
     JLabel qrCodeLabel;
-    // NEW: A menu bar for file operations
     JMenuBar menuBar;
     JMenu fileMenu;
     JMenuItem saveMenuItem;
 
     // --- QR Code Data ---
-    private BufferedImage currentQRCodeImage; // Holds the generated image in memory
+    private BufferedImage currentQRCodeImage;
 
     public QRCodeGUI() {
-        // --- Main Frame ---
-        frame = new JFrame("Enhanced QR Code Generator");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(450, 500); // Made it taller for the preview
-        frame.setLayout(null);
+        // --- Define our new color palette (NEW) ---
+        Color bgColor = Color.decode("#2B2B2B"); // Dark gray background
+        Color fieldColor = Color.decode("#3C3F41"); // Lighter gray for fields
+        Color textColor = Color.decode("#BBBBBB"); // Light gray for text
+        Color accentColor = Color.decode("#4A85C1"); // A nice blue for the button
 
-        // --- Menu Bar (NEW) ---
+        // --- Main Frame ---
+        frame = new JFrame("Colorful QR Code Generator");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(450, 500);
+        frame.setLayout(null);
+        frame.getContentPane().setBackground(bgColor); // COLOR: Set frame background
+
+        // --- Menu Bar ---
         menuBar = new JMenuBar();
         fileMenu = new JMenu("File");
         saveMenuItem = new JMenuItem("Save As...");
         saveMenuItem.addActionListener(this);
+        // COLOR: Style the menu
+        menuBar.setBackground(fieldColor);
+        fileMenu.setForeground(textColor);
+        saveMenuItem.setBackground(fieldColor);
+        saveMenuItem.setForeground(textColor);
         fileMenu.add(saveMenuItem);
         menuBar.add(fileMenu);
         frame.setJMenuBar(menuBar);
@@ -46,22 +56,31 @@ public class QRCodeGUI implements ActionListener {
         // --- Text Field for Input ---
         textField = new JTextField();
         textField.setBounds(50, 20, 330, 30);
-        // NEW: Add a KeyListener to update the QR code as the user types
         textField.addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) {
                 updateQRCode();
             }
         });
+        // COLOR: Style the text field
+        textField.setBackground(fieldColor);
+        textField.setForeground(textColor);
+        textField.setCaretColor(Color.WHITE); // Sets the blinking cursor color
+        textField.setBorder(BorderFactory.createLineBorder(accentColor));
 
-        // --- Clear Button (NEW) ---
+        // --- Clear Button ---
         clearButton = new JButton("Clear");
         clearButton.setBounds(160, 60, 100, 30);
         clearButton.addActionListener(this);
+        // COLOR: Style the button
+        clearButton.setBackground(accentColor);
+        clearButton.setForeground(Color.WHITE);
+        clearButton.setFocusable(false);
+        clearButton.setBorderPainted(false);
 
-        // --- QR Code Preview Label (NEW) ---
+        // --- QR Code Preview Label ---
         qrCodeLabel = new JLabel();
-        qrCodeLabel.setBounds(65, 110, 300, 300); // Positioned below the text field
-        qrCodeLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        qrCodeLabel.setBounds(65, 110, 300, 300);
+        qrCodeLabel.setBorder(BorderFactory.createLineBorder(fieldColor));
 
         // --- Add Components to Frame ---
         frame.add(textField);
@@ -70,16 +89,14 @@ public class QRCodeGUI implements ActionListener {
         frame.setVisible(true);
     }
 
-    // Main method to start the application
     public static void main(String[] args) {
         new QRCodeGUI();
     }
     
-    // This is our new helper method to generate and display the QR code
     private void updateQRCode() {
         String data = textField.getText();
         if (data.trim().isEmpty()) {
-            qrCodeLabel.setIcon(null); // Clear the preview if text field is empty
+            qrCodeLabel.setIcon(null);
             currentQRCodeImage = null;
             return;
         }
@@ -87,26 +104,21 @@ public class QRCodeGUI implements ActionListener {
         try {
             BitMatrix matrix = new MultiFormatWriter().encode(data, BarcodeFormat.QR_CODE, 300, 300);
             currentQRCodeImage = MatrixToImageWriter.toBufferedImage(matrix);
-            // Display the image in the JLabel
             qrCodeLabel.setIcon(new ImageIcon(currentQRCodeImage));
         } catch (Exception ex) {
-            // Don't pop up an error for every typo, just clear the image
             qrCodeLabel.setIcon(null);
             currentQRCodeImage = null;
         }
     }
 
-    // This method handles button and menu clicks
     @Override
     public void actionPerformed(ActionEvent e) {
-        // Handle "Clear" button click
         if (e.getSource() == clearButton) {
             textField.setText("");
             qrCodeLabel.setIcon(null);
             currentQRCodeImage = null;
         }
         
-        // Handle "Save As..." menu item click
         if (e.getSource() == saveMenuItem) {
             if (currentQRCodeImage == null) {
                 JOptionPane.showMessageDialog(frame, "There is no QR Code to save.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -120,7 +132,6 @@ public class QRCodeGUI implements ActionListener {
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
                 try {
-                    // Ensure the file has a .png extension
                     String filePath = fileToSave.getAbsolutePath();
                     if (!filePath.toLowerCase().endsWith(".png")) {
                         fileToSave = new File(filePath + ".png");
